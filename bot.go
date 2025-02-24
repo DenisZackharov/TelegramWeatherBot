@@ -18,23 +18,35 @@ import (
 
 var db *sql.DB
 
-var weatherTypes = map[string]string{
-	"clear": "ясно",
-	"partly-cloudy": "малооблачно",
-	"cloudy": "облачно с прояснениями",
-	"overcast": "пасмурно",
-	"light-rain": "небольшой дождь",
-	"rain": "дождь",
-	"heavy-rain": "сильный дождь",
-	"showers": "ливень",
-	"wet-snow": "дождь со снегом",
-	"light-snow": "небольшой снег",
-	"snow": "снег",
-	"snow-showers": "снегопад",
-	"hail": "град",
-	"thunderstorm": "гроза",
-	"thunderstorm-with-rain": "дождь с грозой",
-	"thunderstorm-with-hail": "гроза с градом",
+var weatherTypes = map[int]string{
+	0: "Чистое небо",
+	1: "Преимущественно ясно",
+	2: "Переменная облачность",
+	3: "Пасмурно",
+	45: "Туман",
+	48: "Изморозь",
+	51: "Морось слабая и интенсивная",
+	53: "Морось умеренная",
+	55: "Морось интенсивная",
+	56: "Замерзающая морось",
+	57: "Сильная замерзающая морось",
+	61: "Дождь слабый",
+	63: "Дождь умеренный",
+	65: "Дождь интенсивный",
+	66: "Замерзающий дождь слабый",
+	67: "Замерзающий дождь сильный",
+	71: "Снегопад слабый",
+	73: "Снегопад умеренный",
+	75: "Снегопад сильный",
+	77: "Снежные зерна",
+	80: "Ливневые дожди слабые",
+	81: "Ливневые дожди умеренные",
+	82: "Ливневые дожди сильные",
+	85: "Снежные ливни слабые",
+	86: "Снежные ливни сильные",
+	95: "Гроза",
+	96: "Гроза с небольшим градом",
+	99: "Гроза с сильным градом",
 }
 
 type User struct {
@@ -46,18 +58,17 @@ type User struct {
 
 var users = make(map[int64]User)
 
-const weatherAPIURL = "https://api.weather.yandex.ru/v2/forecast"
+const weatherAPIURL = "https://api.open-meteo.com/v1/forecast"
 
 type WeatherResponse struct {
-	Fact struct {
-		Temp float64 `json:"temp"`
-		Condition string `json:"condition"`
-	} `json:"fact"`
+	Current struct {
+		Temp float64 `json:"temperature_2m"`
+		Code int `json:"weather_code"`
+	} `json:"current"`
 }
 
 func getWeather(lat, lon float64) (string, error) {
-	apiKey := os.Getenv("WEATHER_API_KEY")
-	url := fmt.Sprintf("%s?lat=%.2f&lon=%.2f&lang=ru_RU&limit=1", weatherAPIURL, lat, lon)
+	url := fmt.Sprintf("%s?latitude=%.2f&longitude=%.2f&current=temperature_2m,weather_code", weatherAPIURL, lat, lon)
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -65,8 +76,6 @@ func getWeather(lat, lon float64) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	req.Header.Add("X-Yandex-Weather-Key", apiKey)
 
 	resp, err := client.Do(req)
 
@@ -80,8 +89,8 @@ func getWeather(lat, lon float64) (string, error) {
 		return "", err
 	}
 
-	temperature := weatherData.Fact.Temp
-	description := weatherData.Fact.Condition
+	temperature := weatherData.Current.Temp
+	description := weatherData.Current.Code
 	prepearedCondition := weatherTypes[description]
 
 	return fmt.Sprintf("🌤 Погода: %s\n🌡 Температура: %.1f°C", prepearedCondition, temperature), nil
