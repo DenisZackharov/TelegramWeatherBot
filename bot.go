@@ -188,6 +188,8 @@ func handleMessage(msg *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 		} else {
 			bot.Send(tgbotapi.NewMessage(chatID, "❌ Некорректный формат времени. Используй формат `HH:MM` (например, `/settime 07:30`)"))
 		}
+	default:
+		bot.Send(tgbotapi.NewMessage(chatID, "⚠️ Неизвестная команда!"))
 	}
 }
 

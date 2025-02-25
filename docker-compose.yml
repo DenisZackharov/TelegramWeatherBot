@@ -1,0 +1,30 @@
+services:
+  bot:
+    build: .
+    container_name: telegram-bot
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    networks:
+      - bot_network
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bot_network
+
+volumes:
+  postgres_data:
+
+networks:
+  bot_network:
