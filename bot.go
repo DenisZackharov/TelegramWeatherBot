@@ -210,8 +210,10 @@ func isValidTimeFormat(timeStr string) bool {
 }
 
 func scheduleWeatherUpdates(bot *tgbotapi.BotAPI) {
+	loc := time.FixedZone("UTC+3", 3*60*60)
+
 	for {
-		now := time.Now().Format("15:04")
+		now := time.Now().In(loc).Format("15:04")
 
 		for _, user := range users {
 			if user.SendTime == now {
